@@ -10,7 +10,6 @@ static const unsigned int gappih    = 20;       /* horiz inner gap between windo
 static const unsigned int gappiv    = 10;       /* vert inner gap between windows */
 static const unsigned int gappoh    = 10;       /* horiz outer gap between windows and screen edge */
 static const unsigned int gappov    = 30;       /* vert outer gap between windows and screen edge */
-static const int swallowfloating    = 0;        /* 1 means swallow floating windows by default */
 static const int smartgaps          = 1;        /* 1 means no outer gap when there is only one window */
 static const int showbar            = 1;        /* 0 means no bar */
 static const int topbar             = 0;        /* 0 means bottom bar */
@@ -33,11 +32,13 @@ typedef struct {
 	const void *cmd;
 } Sp;
 const char *spcmd1[] = {"st", "-n", "spterm", "-g", "120x34", NULL };
-const char *spcmd2[] = {"st", "-n", "spcalc", "-f", "monospace:size=16", "-g", "50x20", "-e", "bc", "-lq", NULL };
+const char *spcmd2[] = {"st", "-n", "scratchcalc", "-t", "Calculator", "-g", "120x34", "-e", "dropdowncalc", NULL };
+const char *spcmd3[] = {"st", "-n", "matrix", "-g", "120x34", "-e", "weechat", NULL };
 static Sp scratchpads[] = {
 	/* name          cmd  */
 	{"spterm",      spcmd1},
-	{"spranger",    spcmd2},
+	{"dropdowncalc",spcmd2},
+	{"matrix",	spcmd3},
 };
 
 /* tagging */
@@ -50,13 +51,15 @@ static const Rule rules[] = {
 	 *	WM_CLASS(STRING) = instance, class
 	 *	WM_NAME(STRING) = title
 	 */
-	/* class      instance    title       tags mask     isfloating   isterminal noswallow monitor */
-/*	{ "Gimp",     NULL,       NULL,       1 << 8,       0,           0,         0,        -1 },*/
-	{ "St",       NULL,       NULL,       0,            0,           1,         0,        -1 },
-	{ "qutebrowser", NULL,    NULL,       0,            0,           1,         0,        -1 }, // Hier swallowed qute zb mpv
-	{ NULL,       NULL,       "Event Tester", 0,        0,           0,         1,        -1 }, // Event Tester wird nie geswalloed
-	{ NULL,      "spterm",    NULL,       SPTAG(0),     1,           1,         0,        -1 },
-	{ NULL,      "spcalc",    NULL,       SPTAG(1),     1,           1,         0,        -1 },
+	/* class      instance    title       tags mask     isfloating   monitor */
+/*	{ "Gimp",     NULL,       NULL,       1 << 8,       0,                 -1 },*/
+	{ "St",       NULL,       NULL,       0,            0,                  -1 },
+	{ "qutebrowser", NULL,    NULL,       0,            0,                 -1 }, // Hier swallowed qute zb mpv
+	{ NULL,       NULL,       "Event Tester", 0,        0,                   -1 }, // Event Tester wird nie geswalloed
+	{ NULL,       NULL,       "root",         0,        0,               -1 }, // Event Tester wird nie geswalloed
+	{ NULL,      "spterm",    NULL,       SPTAG(0),     1,                   -1 },
+	{ NULL,	     "scratchcalc",  NULL,    SPTAG(1),	    1,		        -1 },
+	{ NULL,	     "matrix",       NULL,    SPTAG(2),     1,                -1 },
 };
 
 /* layout(s) */
@@ -134,23 +137,19 @@ static Key keys[] = {
 	{ MODKEY|ShiftMask,		XK_equal,	spawn,		SHCMD("pamixer --allow-boost -i 15; kill -44 $(pidof dwmblocks)") },
 	{ MODKEY,			XK_BackSpace,	spawn,		SHCMD("sysact") },
 	{ MODKEY|ShiftMask,		XK_BackSpace,	spawn,		SHCMD("sysact") },
-
 	{ MODKEY,			XK_Tab,		view,		{0} },
-	/* { MODKEY|ShiftMask,		XK_Tab,		spawn,		SHCMD("") }, */
 	{ MODKEY,			XK_q,		killclient,	{0} },
 	{ MODKEY|ShiftMask,		XK_q,		spawn,		SHCMD("sysact") },
 	{ MODKEY,			XK_w,		spawn,		SHCMD("$BROWSER") },
 	{ MODKEY|ShiftMask,		XK_w,		spawn,		SHCMD("st -e sudo nmtui") },
 	{ MODKEY|ALTKEY|ShiftMask,	XK_w,		spawn,		SHCMD("wireshark") },
 	{ MODKEY,			XK_e,		spawn,		SHCMD("st -e neomutt ; pkill -RTMIN+12 dwmblocks; rmdir ~/.abook") },
-	/*{ MODKEY|ShiftMask,		XK_e,		spawn,		SHCMD("st -e abook -C ~/.config/abook/abookrc --datafile ~/.config/abook/addressbook") },*/
-
 	{ MODKEY|ShiftMask,		XK_e,		spawn,		SHCMD("st -e weechat-starter") },
+	{ MODKEY|ALTKEY,		XK_e,		togglescratch,	{.ui = 2 } },
 	{ MODKEY|ALTKEY|ShiftMask,	XK_e,		spawn,		SHCMD("element-desktop") },
 	{ MODKEY, 			XK_r,		spawn,		SHCMD("st -e ranger")},
 	{ MODKEY|ShiftMask,		XK_r,		spawn,		SHCMD("st -e htop") },
 	{ MODKEY|ALTKEY|ShiftMask,	XK_r,		spawn,		SHCMD("st -e gotop") },
-/*	{ MODKEY,			XK_v,		spawn,		SHCMD("st -e vit") },*/
 	{ MODKEY,			XK_t,		setlayout,	{.v = &layouts[0]} },
 	{ MODKEY|ShiftMask,		XK_t,		setlayout,	{.v = &layouts[1]} },
 	{ MODKEY,			XK_y,		setlayout,	{.v = &layouts[2]} },
@@ -172,12 +171,10 @@ static Key keys[] = {
 	{ MODKEY,			XK_a,		togglegaps,	{0} },
 	{ MODKEY|ShiftMask,		XK_a,		defaultgaps,	{0} },
 	{ MODKEY|ShiftMask, 		XK_s, 		spawn,		SHCMD("spotify") },
-	/*{ MODKEY|ShiftMask,		XK_s,		togglesticky,	{0} },*/
 	{ MODKEY, 			XK_s,		spawn,		SHCMD("passmenu2") },
 	{ MODKEY,			XK_d,		spawn,          {.v = dmenucmd } },
  	{ MODKEY|ShiftMask,		XK_d,		spawn,		SHCMD("de launchdmenu") },
 	{ MODKEY,			XK_f,		togglefullscr,	{0} },
-	/*{ MODKEY|ShiftMask,		XK_f,		setlayout,	{.v = &layouts[8]} },*/
 	{ MODKEY|ShiftMask,		XK_f,		spawn,		SHCMD("finder") },
 	{ MODKEY,			XK_g,		shiftview,	{ .i = -1 } },
 	{ MODKEY|ShiftMask,		XK_g,		shifttag,	{ .i = -1 } },
@@ -190,26 +187,20 @@ static Key keys[] = {
 	{ MODKEY|ALTKEY|ShiftMask, 	XK_l,		spawn,		SHCMD("st -e ranger Documents/Polybox/MSc/5") },
 	{ MODKEY,			XK_semicolon,	shiftview,	{ .i = 1 } },
 	{ MODKEY|ShiftMask,		XK_semicolon,	shifttag,	{ .i = 1 } },
-	{ MODKEY,			XK_apostrophe,	togglescratch,	{.ui = 1} },
-	/* { MODKEY|ShiftMask,		XK_apostrophe,	spawn,		SHCMD("") }, */
+	{ MODKEY|ALTKEY|ShiftMask,	XK_semicolon,	togglescratch,	{.ui = 1} },
 	{ MODKEY,			XK_Return,	spawn,		{.v = termcmd } },
 	{ MODKEY|ShiftMask,		XK_Return,	togglescratch,	{.ui = 0} },
 
 	{ MODKEY,			XK_z,		incrgaps,	{.i = +3 } },
 	{ MODKEY|ShiftMask,		XK_z,		spawn,		SHCMD("zoom-starter") },
 	{ MODKEY,			XK_x,		incrgaps,	{.i = -3 } },
-	/* { MODKEY|ShiftMask,		XK_x,		spawn,		SHCMD("") }, */
 	 { MODKEY|ShiftMask,		XK_c,		spawn,		SHCMD("st -e calculator") },
 	 { MODKEY,			XK_c,		spawn,		SHCMD("st -e calcurse") },
 	/* V is automatically bound above in STACKKEYS */
 	{ MODKEY,			XK_b,		togglebar,	{0} },
 	{ MODKEY|ShiftMask,		XK_b,		spawn,		SHCMD("pkill qutebrowser") },
-	/*{ MODKEY,			XK_n,		spawn,		SHCMD("st -e nvim -c VimwikiIndex") },*/
 	{ MODKEY,			XK_n,		spawn,   	SHCMD("st -e  newsboatstarter")  },
 	{ MODKEY|ShiftMask,		XK_n,		spawn,		SHCMD("echo $(pass ETH/mail) | xclip -i -selection primary | xdotool click 2")},
-	/* xdotool type $(xclip -selection primary -o)
-	{ MODKEY, 			XK_n,		spawn,		SHCMD("echo $(pass ETH/mail) | xvkbd -xsendevent -file -
-") },*/
 	{ MODKEY,			XK_m,		spawn,		SHCMD("st -e ncmpcpp") },
 	{ MODKEY|ShiftMask,		XK_m,		spawn,		SHCMD("pamixer -t; kill -44 $(pidof dwmblocks)") },
 	{ MODKEY,			XK_comma,	spawn,		SHCMD("mpc prev") },
@@ -239,11 +230,9 @@ static Key keys[] = {
 	{ MODKEY,			XK_F9,		spawn,		SHCMD("dmenumount") },
 	{ MODKEY,			XK_F10,		spawn,		SHCMD("dmenuumount") },
 	{ MODKEY,			XK_F11,		spawn,		SHCMD("mpv --no-cache --no-osc --no-input-default-bindings --input-conf=/dev/null /dev/video0") },
-	/*{ MODKEY,			XK_F11,		spawn,		SHCMD("mpv --no-cache --no-osc --no-input-default-bindings --input-conf=/dev/null --title=webcam $(ls /dev/video[0,2,4,6,8] | tail -n 1)") },*/
 	{ MODKEY,			XK_F12,		xrdb,		{.v = NULL } },
 	{ MODKEY,			XK_space,	zoom,		{0} },
 	{ MODKEY|ShiftMask,		XK_space,	togglefloating,	{0} },
-
 	{ 0,				XK_Print,	spawn,		SHCMD("maim pic-full-$(date '+%y%m%d-%H%M-%S').png") },
 	{ ShiftMask,			XK_Print,	spawn,		SHCMD("maimpick") },
 	{ MODKEY,			XK_Print,	spawn,		SHCMD("dmenurecord") },
