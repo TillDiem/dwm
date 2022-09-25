@@ -9,18 +9,21 @@ static const unsigned int snap      = 32;       /* snap pixel 32 */
 static const unsigned int gappih    = 20;       /* horiz inner gap between windows */
 static const unsigned int gappiv    = 10;       /* vert inner gap between windows */
 static const unsigned int gappoh    = 10;       /* horiz outer gap between windows and screen edge */
-static const unsigned int gappov    = 30;       /* vert outer gap between windows and screen edge */
+static const unsigned int gappov    = 10;       /* vert outer gap between windows and screen edge */
 static const int smartgaps          = 1;        /* 1 means no outer gap when there is only one window */
 static const int showbar            = 1;        /* 0 means no bar */
 static const int topbar             = 0;        /* 0 means bottom bar */
 static const char *fonts[]          = { "monospace:size=10", "symbola:pixelsize=25:antialias=true:autohint=true"  };
 static char dmenufont[]             = "monospace:size=10";
-static char normbgcolor[]           = "#333333";//"#222222";
-static char normbordercolor[]       = "#444444";
-static char normfgcolor[]           = "#bbbbbb";
-static char selfgcolor[]            = "#eeeeee";
-static char selbordercolor[]        = "#005696"; //"#005577";
-static char selbgcolor[]            = "#005696"; //"#005577";
+
+static char normbgcolor[]           = "#0D1017";
+static char normbordercolor[]       = "#122132";
+static char normfgcolor[]           = "#BFBDB6";
+
+static char selbgcolor[]            = "#1b3a5b";
+static char selbordercolor[]        = "#1b3a5b";
+static char selfgcolor[]            = "#BFBDB6";
+
 static char *colors[][3] = {
        /*               fg           bg           border   */
        [SchemeNorm] = { normfgcolor, normbgcolor, normbordercolor },
@@ -140,7 +143,7 @@ static Key keys[] = {
 	{ MODKEY,			XK_Tab,		view,		{0} },
 	{ MODKEY,			XK_q,		killclient,	{0} },
 	{ MODKEY|ShiftMask,		XK_q,		spawn,		SHCMD("sysact") },
-	{ MODKEY,			XK_w,		spawn,		SHCMD("$BROWSER") },
+	{ MODKEY,			XK_w,		spawn,		SHCMD("qutebrowser") },
 	{ MODKEY|ShiftMask,		XK_w,		spawn,		SHCMD("st -e sudo nmtui") },
 	{ MODKEY|ALTKEY|ShiftMask,	XK_w,		spawn,		SHCMD("wireshark") },
 	{ MODKEY,			XK_e,		spawn,		SHCMD("st -e neomutt ; pkill -RTMIN+12 dwmblocks; rmdir ~/.abook") },
@@ -148,8 +151,8 @@ static Key keys[] = {
 	{ MODKEY|ALTKEY,		XK_e,		togglescratch,	{.ui = 2 } },
 	{ MODKEY|ALTKEY|ShiftMask,	XK_e,		spawn,		SHCMD("element-desktop") },
 	{ MODKEY, 			XK_r,		spawn,		SHCMD("st -e ranger")},
-	{ MODKEY|ShiftMask,		XK_r,		spawn,		SHCMD("st -e htop") },
-	{ MODKEY|ALTKEY|ShiftMask,	XK_r,		spawn,		SHCMD("st -e gotop") },
+	{ MODKEY|ShiftMask,		XK_r,		spawn,		SHCMD("st -e ranger ~/wrk/ma_ra/") },
+	{ MODKEY|ALTKEY|ShiftMask,	XK_r,		spawn,		SHCMD("st -e htop") },
 	{ MODKEY,			XK_t,		setlayout,	{.v = &layouts[0]} },
 	{ MODKEY|ShiftMask,		XK_t,		setlayout,	{.v = &layouts[1]} },
 	{ MODKEY,			XK_y,		setlayout,	{.v = &layouts[2]} },
@@ -175,7 +178,7 @@ static Key keys[] = {
 	{ MODKEY,			XK_d,		spawn,          {.v = dmenucmd } },
  	{ MODKEY|ShiftMask,		XK_d,		spawn,		SHCMD("de launchdmenu") },
 	{ MODKEY,			XK_f,		togglefullscr,	{0} },
-	{ MODKEY|ShiftMask,		XK_f,		spawn,		SHCMD("finder") },
+	{ MODKEY|ShiftMask,		XK_f,		togglesticky,	{.i=False} },
 	{ MODKEY,			XK_g,		shiftview,	{ .i = -1 } },
 	{ MODKEY|ShiftMask,		XK_g,		shifttag,	{ .i = -1 } },
 	{ MODKEY,			XK_h,		setmfact,	{.f = -0.05} },
@@ -183,13 +186,15 @@ static Key keys[] = {
 	{ MODKEY|ALTKEY|ShiftMask,	XK_h,		spawn,		SHCMD("killall slack")},
 	/* J and K are automatically bound above in STACKEYS */
 	{ MODKEY,			XK_l,		setmfact,      	{.f = +0.05} },
-	{ MODKEY|ShiftMask, 		XK_l,		spawn,		SHCMD("st -e ranger Documents/Polybox/MSc/MasterThesis") },
-	{ MODKEY|ALTKEY|ShiftMask, 	XK_l,		spawn,		SHCMD("st -e ranger Documents/Polybox/MSc/5") },
+	{ MODKEY|ShiftMask, 		XK_l,		spawn,		SHCMD("qutebrowser ~/doc/LabBook/index.html") },
+	{ MODKEY|ALTKEY|ShiftMask, 	XK_l,		spawn,		SHCMD("st -e nvim ~/doc/vimwiki/labbook/index.md") },
+	{ MODKEY,			XK_v,		spawn,		SHCMD("vpn") },
 	{ MODKEY,			XK_semicolon,	shiftview,	{ .i = 1 } },
 	{ MODKEY|ShiftMask,		XK_semicolon,	shifttag,	{ .i = 1 } },
 	{ MODKEY|ALTKEY|ShiftMask,	XK_semicolon,	togglescratch,	{.ui = 1} },
 	{ MODKEY,			XK_Return,	spawn,		{.v = termcmd } },
 	{ MODKEY|ShiftMask,		XK_Return,	togglescratch,	{.ui = 0} },
+	{ MODKEY|ALTKEY|ShiftMask,	XK_Return,	spawn, 		SHCMD("st -e ssh HEP") },
 
 	{ MODKEY,			XK_z,		incrgaps,	{.i = +3 } },
 	{ MODKEY|ShiftMask,		XK_z,		spawn,		SHCMD("zoom-starter") },
@@ -200,7 +205,8 @@ static Key keys[] = {
 	{ MODKEY,			XK_b,		togglebar,	{0} },
 	{ MODKEY|ShiftMask,		XK_b,		spawn,		SHCMD("pkill qutebrowser") },
 	{ MODKEY,			XK_n,		spawn,   	SHCMD("st -e  newsboatstarter")  },
-	{ MODKEY|ShiftMask,		XK_n,		spawn,		SHCMD("echo $(pass ETH/mail) | xclip -i -selection primary | xdotool click 2")},
+	{ MODKEY|ALTKEY|ShiftMask,	XK_n,		spawn,		SHCMD("echo $(pass ethz.ch/mail.ethz.ch/tilld) | xclip -i -selection primary; echo $(pass ethz.ch/mail.ethz.ch/tilld) | xclip -i -selection primary | xdotool click 2")},
+	{ MODKEY|ShiftMask,		XK_n,		spawn,		SHCMD("echo $(pass manchester.ac.uk/pc2014.hep.manchester.ac.uk/tdieminger) | xclip -i -selection primary; echo $(pass manchester.ac.uk/pc2014.hep.manchester.ac.uk/tdieminger) | xclip -i -selection primary | xdotool click 2")},
 	{ MODKEY,			XK_m,		spawn,		SHCMD("st -e ncmpcpp") },
 	{ MODKEY|ShiftMask,		XK_m,		spawn,		SHCMD("pamixer -t; kill -44 $(pidof dwmblocks)") },
 	{ MODKEY,			XK_comma,	spawn,		SHCMD("mpc prev") },
@@ -219,7 +225,8 @@ static Key keys[] = {
 	{ MODKEY|ShiftMask,		XK_Page_Down,	shifttag,	{ .i = +1 } },
 	{ MODKEY,			XK_Insert,	spawn,		SHCMD("notify-send \"📋 Clipboard contents:\" \"$(xclip -o -selection clipboard)\"") },
 
-	{ MODKEY,			XK_F1,		spawn,		SHCMD("groff -mom /usr/local/share/dwm/larbs.mom -Tpdf | zathura -") },
+	//{ MODKEY,			XK_F1,		spawn,		SHCMD("groff -mom /usr/local/share/dwm/larbs.mom -Tpdf | zathura -") },
+	{ MODKEY,			XK_F1,		spawn,		SHCMD("zathura ~/.local/share/pdg_guide.pdf") },
 	{ MODKEY,			XK_F2,		spawn,		SHCMD("dmenuunicode") },
 	{ MODKEY,			XK_F3,		spawn,		SHCMD("displayselect") },
 	{ MODKEY,			XK_F4,		spawn,		SHCMD("st -e pulsemixer; kill -44 $(pidof dwmblocks)") },
@@ -254,12 +261,12 @@ static Key keys[] = {
 	{ 0, XF86XK_PowerOff,		spawn,		SHCMD("sysact") },
 	{ 0, XF86XK_Calculator,		spawn,		SHCMD("st -e bc -l") },
 	{ 0, XF86XK_Sleep,		spawn,		SHCMD("sudo -A zzz") },
-	{ 0, XF86XK_WWW,		spawn,		SHCMD("$BROWSER") },
+	{ 0, XF86XK_WWW,		spawn,		SHCMD("qutebrowser") },
 	{ 0, XF86XK_DOS,		spawn,		SHCMD("st") },
 	{ 0, XF86XK_ScreenSaver,	spawn,		SHCMD("slock & xset dpms force off; mpc pause; pauseallmpv") },
 	{ 0, XF86XK_TaskPane,		spawn,		SHCMD("st -e htop") },
 	{ 0, XF86XK_Mail,		spawn,		SHCMD("st -e neomutt ; pkill -RTMIN+12 dwmblocks") },
-	{ 0, XF86XK_MyComputer,		spawn,		SHCMD("st -e ranger /") },
+	{ 0, XF86XK_MyComputer,		spawn,		SHCMD("st -e cdr /") },
 	/* { 0, XF86XK_Battery,		spawn,		SHCMD("") }, */
 	{ 0, XF86XK_Launch1,		spawn,		SHCMD("xset dpms force off") },
 	{ 0, XF86XK_TouchpadToggle,	spawn,		SHCMD("(synclient | grep 'TouchpadOff.*1' && synclient TouchpadOff=0) || synclient TouchpadOff=1") },
